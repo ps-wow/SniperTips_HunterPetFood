@@ -3,3 +3,4 @@ ignore:
   - .editorconfig
   - .github
   - screenshots
+  - CHANGELOG.md

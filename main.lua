@@ -52,7 +52,7 @@ function SniperTips_HunterPetFood:IsClassicRealm()
   end
 
   -- return false -- TODO: once happy with classic logic
-  return true
+  return true -- Remove this once happy with classic logic
 end
 
 --Only load the addon if player is a hunter
@@ -77,9 +77,16 @@ function SniperTips_HunterPetFood:HandleItem(self, itemName, itemLink, itemRarit
   -- Get the item ID
   local id = string.match(itemLink, "item:(%d*)")
 
-  local rating, ratingColour = SniperTips_HunterPetFood:GetFoodRating(id)
+  -- Only load for the consumables item category
+  -- class 0 = consumables
+  -- subclass 5 = Food & Drink
+  -- we may have to add overrides above if anything eatable is not of this type,
+  -- although I doubt that will be the case?
+  if (itemClassID ~= 0 and itemSubClassID ~= 5) then
+    return -- void
+  end
 
-  SniperTips_HunterPetFood:Dump('rating', rating)
+  local rating, ratingColour = SniperTips_HunterPetFood:GetFoodRating(id)
 
   if (rating ~= nil and ratingColour ~= nil) then
     --self:AddDoubleLine("Food Rating: ",rating,unpack(SniperTips_HunterPetFood.Globals.TitleColour),unpack(ratingColour));
@@ -97,15 +104,17 @@ end
 function SniperTips_HunterPetFood:GetFoodRating(itemId)
   local petExists = UnitExists("pet")
   local petFoodRatings = {
+    ["Bear"] = {
+    },
     ["Boar"] = {
-       -- TODO: !important: 20 and 60 are placeholder values
-      ["2681"] = { ["good"] = 13, ["bad"] = 22, ["na"] = 60 },
-      ["117"] = { ["good"] = 13, ["bad"] = 22, ["na"] = 60 },
+       -- TODO: !important: 22 and 60 are placeholder values
+      --["2681"] = { ["good"] = 13, ["bad"] = 22, ["na"] = 60 },
+      --["117"] = { ["good"] = 13, ["bad"] = 22, ["na"] = 60 },
     },
     ["Wolf"] = {
       -- TODO: Also placeholder values for development
-      ["2681"] = { ["good"] = 13, ["bad"] = 22, ["na"] = 60 },
-      ["769"] = { ["good"] = 13, ["bad"] = 22, ["na"] = 60 },
+      --["2681"] = { ["good"] = 13, ["bad"] = 22, ["na"] = 60 },
+      --["769"] = { ["good"] = 13, ["bad"] = 22, ["na"] = 60 },
     }
   }
 
@@ -115,28 +124,31 @@ function SniperTips_HunterPetFood:GetFoodRating(itemId)
     -- Get the pet level.
     local petLevel = UnitLevel("pet");
 
-    -- Lookup the item id against the pet type
-    ratings = petFoodRatings[petType][itemId] or nil;
+    -- Only load ratings if we have them defined for the petType
+    if (petFoodRatings[petType] ~= nil) then
+      -- Lookup the item id against the pet type
+      ratings = petFoodRatings[petType][itemId] or nil;
 
-    if (ratings ~= nil) then
-      -- return the rating (coloured)
-      if (petLevel >= ratings.na) then
-        rating = SniperTips_HunterPetFood.Globals.NA
-        ratingColour = SniperTips_HunterPetFood.Globals.Ratings.NA.escape
-      elseif (petLevel >= ratings.bad) then
-        rating = SniperTips_HunterPetFood.Globals.Bad
-        ratingColour = SniperTips_HunterPetFood.Globals.Ratings.Bad.escape
-      elseif (petLevel >= ratings.good) then
-        rating = SniperTips_HunterPetFood.Globals.Good
-        ratingColour = SniperTips_HunterPetFood.Globals.Ratings.Good.escape
-      else
-        rating = SniperTips_HunterPetFood.Globals.Epic
-        ratingColour = SniperTips_HunterPetFood.Globals.Ratings.Epic.escape
+      if (ratings ~= nil) then
+        -- return the rating (coloured)
+        if (petLevel >= ratings.na) then
+          rating = SniperTips_HunterPetFood.Globals.NA
+          ratingColour = SniperTips_HunterPetFood.Globals.Ratings.NA.escape
+        elseif (petLevel >= ratings.bad) then
+          rating = SniperTips_HunterPetFood.Globals.Bad
+          ratingColour = SniperTips_HunterPetFood.Globals.Ratings.Bad.escape
+        elseif (petLevel >= ratings.good) then
+          rating = SniperTips_HunterPetFood.Globals.Good
+          ratingColour = SniperTips_HunterPetFood.Globals.Ratings.Good.escape
+        else
+          rating = SniperTips_HunterPetFood.Globals.Epic
+          ratingColour = SniperTips_HunterPetFood.Globals.Ratings.Epic.escape
+        end
+
+        return rating, ratingColour
       end
-
-      return rating, ratingColour
-    end
-  end
+    end -- (/if petFoodRatings[petType])
+  end -- (/if petExists)
 
   return nil, nil
 end
