@@ -51,8 +51,7 @@ function SniperTips_HunterPetFood:IsClassicRealm()
     return true
   end
 
-  -- return false -- TODO: once happy with classic logic
-  return true -- Remove this once happy with classic logic
+  return false
 end
 
 --Only load the addon if player is a hunter
