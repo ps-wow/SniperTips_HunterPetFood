@@ -1,7 +1,7 @@
 # SniperTips_HunterPetFood
 
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
-![GitHub tag (latest SemVer)](https://img.shields.io/github/tag/ps-wow/SniperTips_VendorPrice.svg)
+![GitHub tag (latest SemVer)](https://img.shields.io/github/tag/ps-wow/SniperTips_HunterPetFood.svg)
 
 Adds quality ratings to food items in bags based on how much happiness they provide to your current pet.
 
