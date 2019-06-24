@@ -35,60 +35,55 @@ SniperTips_HunterPetFood.Globals = {
 }
 
 function SniperTips_HunterPetFood:Dump(str, obj)
-  if ViragDevTool_AddData and SniperTips_HunterPetFood.kbDEBUG then 
-      ViragDevTool_AddData(obj, str) 
+  if ViragDevTool_AddData and SniperTips_HunterPetFood.kbDEBUG then
+      ViragDevTool_AddData(obj, str)
   end
 end
 
----------------------------------------------------
--- Methods to determine if the addon should load --
----------------------------------------------------
+--Only load the addon if player is a hunter
+function SniperTips_HunterPetFood:PlayerClassIsHunter()
+  local _, englishClass, _ = UnitClass('player');
+  return englishClass == 'HUNTER'
+end
 
--- Only load the addon if on a classic realm.
-function SniperTips_HunterPetFood:IsClassicRealm()
-  -- Game is classic if GetPetHappiness global function exists.
-  if _G['GetPetHappiness'] ~= nil then
+-- Combine the above two checks into a single function.
+function SniperTips_HunterPetFood:AddonShouldLoad()
+  return SniperTips_HunterPetFood:PlayerClassIsHunter()
+end
+
+----------------
+-- Core Logic --
+----------------
+function SniperTips_HunterPetFood:ItemIsFood(itemClassID, itemSubClassID, itemId)
+  -- we may have to add overrides above if anything eatable is not of this type,
+  -- although I doubt that will be the case?
+
+  -- 0: Consumables, 5: Food & Drink
+  if (itemClassID == 0 and itemSubClassID == 5) then
+    return true
+  -- 7: Tradeskill, 8: Cooking
+  elseif (itemClassID == 7 and itemSubClassID == 8) then
     return true
   end
 
   return false
 end
 
---Only load the addon if player is a hunter
-function SniperTips_HunterPetFood:PlayerClassIsHunter()
-  _, englishClass, _ = UnitClass('player');
-  return englishClass == 'HUNTER'
-end
-
--- Combine the above two checks into a single function.
-function SniperTips_HunterPetFood:AddonShouldLoad()
-  return SniperTips_HunterPetFood:PlayerClassIsHunter() and SniperTips_HunterPetFood:IsClassicRealm()
-end
-
-----------------
--- Core Logic --
-----------------
-
 function SniperTips_HunterPetFood:HandleItem(self, itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType,
   itemSubType, itemStackCount, itemEquipLoc, itemIcon, itemSellPrice, itemClassID, itemSubClassID, bindType, expacID,
   itemSetID, isCraftingReagent)
-  
+
   -- Get the item ID
   local id = string.match(itemLink, "item:(%d*)")
 
   -- Only load for the consumables item category
-  -- class 0 = consumables
-  -- subclass 5 = Food & Drink
-  -- we may have to add overrides above if anything eatable is not of this type,
-  -- although I doubt that will be the case?
-  if (itemClassID ~= 0 and itemSubClassID ~= 5) then
+  if (SniperTips_HunterPetFood:ItemIsFood(itemClassID, itemSubClassID, id) == false) then
     return -- void
   end
 
   local rating, ratingColour = SniperTips_HunterPetFood:GetFoodRating(id)
 
   if (rating ~= nil and ratingColour ~= nil) then
-    --self:AddDoubleLine("Food Rating: ",rating,unpack(SniperTips_HunterPetFood.Globals.TitleColour),unpack(ratingColour));
     self:AddDoubleLine(
       SniperTips_HunterPetFood.Globals.TitleColour.escape.."Food Rating: ",
       ratingColour..rating
@@ -106,9 +101,10 @@ function SniperTips_HunterPetFood:GetFoodRating(itemId)
     ["Bear"] = {
     },
     ["Boar"] = {
-       -- TODO: !important: 22 and 60 are placeholder values
-      --["2681"] = { ["good"] = 13, ["bad"] = 22, ["na"] = 60 },
-      --["117"] = { ["good"] = 13, ["bad"] = 22, ["na"] = 60 },
+      -- TODO: !important: 22 and 60 are placeholder values
+      -- ["2677"] = { ["good"] = 13, ["bad"] = 22, ["na"] = 60 },
+      -- ["2681"] = { ["good"] = 13, ["bad"] = 22, ["na"] = 60 },
+      -- ["117"] = { ["good"] = 13, ["bad"] = 22, ["na"] = 60 }
     },
     ["Wolf"] = {
       -- TODO: Also placeholder values for development
@@ -126,7 +122,8 @@ function SniperTips_HunterPetFood:GetFoodRating(itemId)
     -- Only load ratings if we have them defined for the petType
     if (petFoodRatings[petType] ~= nil) then
       -- Lookup the item id against the pet type
-      ratings = petFoodRatings[petType][itemId] or nil;
+      local ratings = petFoodRatings[petType][itemId] or nil;
+      local rating, ratingColour;
 
       if (ratings ~= nil) then
         -- return the rating (coloured)
