@@ -1,5 +1,5 @@
 local SniperTips_HunterPetFood = LibStub("AceAddon-3.0"):NewAddon('SniperTips_HunterPetFood');
-local LibTooltip = LibStub("SniperTips-1.0");
+local LibTooltip = LibStub("SniperTips-2.0");
 local tipColour = { 0.6, 0.2, 0.2 }
 SniperTips_HunterPetFood.kbDEBUG = true
 
@@ -69,19 +69,13 @@ function SniperTips_HunterPetFood:ItemIsFood(itemClassID, itemSubClassID, itemId
   return false
 end
 
-function SniperTips_HunterPetFood:HandleItem(self, itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType,
-  itemSubType, itemStackCount, itemEquipLoc, itemIcon, itemSellPrice, itemClassID, itemSubClassID, bindType, expacID,
-  itemSetID, isCraftingReagent)
-
-  -- Get the item ID
-  local id = string.match(itemLink, "item:(%d*)")
-
+function SniperTips_HunterPetFood:HandleItem(self, item)
   -- Only load for the consumables item category
-  if (SniperTips_HunterPetFood:ItemIsFood(itemClassID, itemSubClassID, id) == false) then
+  if (SniperTips_HunterPetFood:ItemIsFood(item.classID, item.subClassID, item.id) == false) then
     return -- void
   end
 
-  local rating, ratingColour = SniperTips_HunterPetFood:GetFoodRating(id)
+  local rating, ratingColour = SniperTips_HunterPetFood:GetFoodRating(item.id)
 
   if (rating ~= nil and ratingColour ~= nil) then
     self:AddDoubleLine(
