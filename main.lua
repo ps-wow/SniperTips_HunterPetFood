@@ -40,15 +40,12 @@ function SniperTips_HunterPetFood:Dump(str, obj)
   end
 end
 
+SniperTips_HunterPetFood:Dump('wtf', true)
+
 --Only load the addon if player is a hunter
 function SniperTips_HunterPetFood:PlayerClassIsHunter()
   local _, englishClass, _ = UnitClass('player');
   return englishClass == 'HUNTER'
-end
-
--- Combine the above two checks into a single function.
-function SniperTips_HunterPetFood:AddonShouldLoad()
-  return SniperTips_HunterPetFood:PlayerClassIsHunter()
 end
 
 ----------------
@@ -57,19 +54,31 @@ end
 function SniperTips_HunterPetFood:ItemIsFood(itemClassID, itemSubClassID, itemId)
   -- we may have to add overrides above if anything eatable is not of this type,
   -- although I doubt that will be the case?
+  -- SniperTips_HunterPetFood:Dump('item is food: itemId', itemId)
+  -- SniperTips_HunterPetFood:Dump('item is food: classID', itemClassID)
+  -- SniperTips_HunterPetFood:Dump('item is food: subClassId', itemSubClassID)
 
-  -- 0: Consumables, 5: Food & Drink
-  if (itemClassID == 0 and itemSubClassID == 5) then
-    return true
-  -- 7: Tradeskill, 8: Cooking
-  elseif (itemClassID == 7 and itemSubClassID == 8) then
+  if (itemClassID == 0) then
     return true
   end
+
+  -- -- 0: Consumables, 5: Food & Drink
+  -- if (itemClassID == 0 and itemSubClassID == 5) then
+  --   return true
+  -- -- 7: Tradeskill, 8: Cooking
+  -- elseif (itemClassID == 7 and itemSubClassID == 8) then
+  --   return true
+  -- end
 
   return false
 end
 
 function SniperTips_HunterPetFood:HandleItem(self, item)
+
+  if (SniperTips_HunterPetFood:PlayerClassIsHunter() == false) then
+    return
+  end
+
   -- Only load for the consumables item category
   if (SniperTips_HunterPetFood:ItemIsFood(item.classID, item.subClassID, item.id) == false) then
     return -- void
@@ -95,6 +104,8 @@ function SniperTips_HunterPetFood:GetFoodRating(itemId)
     ["Bear"] = {
     },
     ["Boar"] = {
+      ["4536"] = { ["good"] = 13, ["bad"] = 22, ["na"] = 60 }, -- Shiny Red Apple [13 = placeholder value]
+      ["11584"] = { ["good"] = 13, ["bad"] = 22, ["na"] = 60 } -- Cactus Apple Surprise [13 = placeholder value]
       -- TODO: !important: 22 and 60 are placeholder values
       -- ["2677"] = { ["good"] = 13, ["bad"] = 22, ["na"] = 60 },
       -- ["2681"] = { ["good"] = 13, ["bad"] = 22, ["na"] = 60 },
@@ -147,6 +158,4 @@ end
 -- Registration --
 ------------------
 
-if (SniperTips_HunterPetFood:AddonShouldLoad()) then
-  LibTooltip:AddItemHandler(SniperTips_HunterPetFood)
-end
+LibTooltip:AddItemHandler(SniperTips_HunterPetFood)
