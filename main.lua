@@ -40,8 +40,6 @@ function SniperTips_HunterPetFood:Dump(str, obj)
   end
 end
 
-SniperTips_HunterPetFood:Dump('wtf', true)
-
 --Only load the addon if player is a hunter
 function SniperTips_HunterPetFood:PlayerClassIsHunter()
   local _, englishClass, _ = UnitClass('player');
@@ -51,25 +49,11 @@ end
 ----------------
 -- Core Logic --
 ----------------
-function SniperTips_HunterPetFood:ItemIsFood(itemClassID, itemSubClassID, itemId)
-  -- we may have to add overrides above if anything eatable is not of this type,
-  -- although I doubt that will be the case?
-  -- SniperTips_HunterPetFood:Dump('item is food: itemId', itemId)
-  -- SniperTips_HunterPetFood:Dump('item is food: classID', itemClassID)
-  -- SniperTips_HunterPetFood:Dump('item is food: subClassId', itemSubClassID)
-
-  if (itemClassID == 0) then
+function SniperTips_HunterPetFood:ItemIsFood(item)
+  -- TODO: Can this if statement be simplified with a boolean return?
+  if (item.classID == 0) then
     return true
   end
-
-  -- -- 0: Consumables, 5: Food & Drink
-  -- if (itemClassID == 0 and itemSubClassID == 5) then
-  --   return true
-  -- -- 7: Tradeskill, 8: Cooking
-  -- elseif (itemClassID == 7 and itemSubClassID == 8) then
-  --   return true
-  -- end
-
   return false
 end
 
@@ -80,11 +64,11 @@ function SniperTips_HunterPetFood:HandleItem(self, item)
   end
 
   -- Only load for the consumables item category
-  if (SniperTips_HunterPetFood:ItemIsFood(item.classID, item.subClassID, item.id) == false) then
+  if (SniperTips_HunterPetFood:ItemIsFood(item) == false) then
     return -- void
   end
 
-  local rating, ratingColour = SniperTips_HunterPetFood:GetFoodRating(item.id)
+  local rating, ratingColour = SniperTips_HunterPetFood:GetFoodRating(item)
 
   if (rating ~= nil and ratingColour ~= nil) then
     self:AddDoubleLine(
@@ -98,23 +82,28 @@ end
 -- Hunter Pet Logic --
 ----------------------
 
-function SniperTips_HunterPetFood:GetFoodRating(itemId)
+function SniperTips_HunterPetFood:GetFoodRating(item)
   local petExists = UnitExists("pet")
   local petFoodRatings = {
+    ["Cat"] = {
+      [8952] = { ["good"] = 61, ["bad"] = 65, ["na"] = 999 }, -- Roasted Quail
+    },
     ["Bear"] = {
     },
     ["Boar"] = {
-      ["4536"] = { ["good"] = 13, ["bad"] = 22, ["na"] = 60 }, -- Shiny Red Apple [13 = placeholder value]
-      ["11584"] = { ["good"] = 13, ["bad"] = 22, ["na"] = 60 } -- Cactus Apple Surprise [13 = placeholder value]
+      [8952] = { ["good"] = 99, ["bad"] = 99, ["na"] = 99 }, -- Roasted Quail
+      --[1015] = { ["good"] = 29, ["bad"] = 999, ["na"] = 99 }, -- Lean Wolf Flank, placeholders: bad/na
+      --[4536] = { ["good"] = 13, ["bad"] = 22, ["na"] = 60 }, -- Shiny Red Apple [13 = placeholder value]
+      --[11584] = { ["good"] = 13, ["bad"] = 22, ["na"] = 60 }, -- Cactus Apple Surprise [13 = placeholder value]
       -- TODO: !important: 22 and 60 are placeholder values
-      -- ["2677"] = { ["good"] = 13, ["bad"] = 22, ["na"] = 60 },
-      -- ["2681"] = { ["good"] = 13, ["bad"] = 22, ["na"] = 60 },
-      -- ["117"] = { ["good"] = 13, ["bad"] = 22, ["na"] = 60 }
+      -- [2677] = { ["good"] = 13, ["bad"] = 22, ["na"] = 60 },
+      -- [2681] = { ["good"] = 13, ["bad"] = 22, ["na"] = 60 },
+      --[117] = { ["good"] = 13, ["bad"] = 22, ["na"] = 60 } -- Tough Jerky [13 = placeholder value]
     },
     ["Wolf"] = {
       -- TODO: Also placeholder values for development
-      --["2681"] = { ["good"] = 13, ["bad"] = 22, ["na"] = 60 },
-      --["769"] = { ["good"] = 13, ["bad"] = 22, ["na"] = 60 },
+      --[2681] = { ["good"] = 13, ["bad"] = 22, ["na"] = 60 },
+      --[769] = { ["good"] = 13, ["bad"] = 22, ["na"] = 60 },
     }
   }
 
@@ -125,9 +114,10 @@ function SniperTips_HunterPetFood:GetFoodRating(itemId)
     local petLevel = UnitLevel("pet");
 
     -- Only load ratings if we have them defined for the petType
+    SniperTips_HunterPetFood:Dump('ratings for pet', petFoodRatings[petType])
     if (petFoodRatings[petType] ~= nil) then
       -- Lookup the item id against the pet type
-      local ratings = petFoodRatings[petType][itemId] or nil;
+      local ratings = petFoodRatings[petType][item.id] or nil;
       local rating, ratingColour;
 
       if (ratings ~= nil) then
